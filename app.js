@@ -10,7 +10,7 @@ const fileRoutes = require("./routes/fileRoutes");
 const userRoutes = require("./routes/userRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 
-dotenv.config(); // Load flat environment variables from .env
+//dotenv.config(); // Load flat environment variables from .env
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'dev'}` });
 
 const app = express();

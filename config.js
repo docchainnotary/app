@@ -2,10 +2,8 @@ require("dotenv").config(); // Load environment variables from .env
 
 module.exports = {
     db: {
-        uri: process.env.MONGO_URI || "mongodb://localhost:27017/docchain",
+        uri: process.env.MONGO_URI || "mongodb://localhost:27017/notary_db",
         options: {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
         },
     },
     jwt: {

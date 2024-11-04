@@ -4,8 +4,8 @@
   "description": "DocNotary Digital Notarization API",
   "main": "app.js",
   "scripts": {
-    "start": "NODE_ENV=production node app.js",
-    "dev": "NODE_ENV=development nodemon app.js",
+    "start": "NODE_ENV=prod node app.js",
+    "dev": "NODE_ENV=dev nodemon app.js",
     "test": "NODE_ENV=test jest --detectOpenHandles",
     "lint": "eslint .",
     "build": "npm run lint && npm run test && webpack",
@@ -36,8 +36,10 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.10.0",
+    "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.11.3"
+    "mysql2": "^3.11.3",
+    "nodemon": "^3.1.7"
   },
   "devDependencies": {
     "eslint": "^9.14.0",

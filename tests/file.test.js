@@ -1,6 +1,16 @@
+const { connectDB, mongoose } = require("../utils/db"); // Import connectDB and mongoose
 const request = require("supertest");
 const app = require("../app");
 const path = require("path");
+
+beforeAll(async () => {
+    await connectDB();
+});
+
+afterAll(async () => {
+    await mongoose.connection.close();
+});
+
 
 let token;
 let projectId;

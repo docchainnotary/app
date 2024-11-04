@@ -1,5 +1,14 @@
+const { connectDB, mongoose } = require("../utils/db"); // Import connectDB and mongoose
 const request = require("supertest");
 const app = require("../app"); // Import the Express app
+
+beforeAll(async () => {
+    await connectDB();
+});
+
+afterAll(async () => {
+    await mongoose.connection.close();
+});
 
 describe("Auth Routes", () => {
     let token;
