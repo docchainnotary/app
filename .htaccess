@@ -1,4 +1,4 @@
-<FilesMatch "^\.env">
+<FilesMatch "^\.env.*">
     Require all denied
 </FilesMatch>
 
