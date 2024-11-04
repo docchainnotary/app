@@ -1,0 +1,39 @@
+project-root
+├── controllers
+│   ├── projectController.js         # Logic for handling projects
+│   ├── fileController.js            # Logic for handling files
+│   └── authController.js            # User authentication logic
+│
+├── models
+│   ├── Project.js                   # MongoDB schema for projects
+│   ├── File.js                      # MongoDB schema for files
+│   └── User.js                      # MongoDB schema for user accounts
+│
+├── middlewares
+│   ├── authMiddleware.js            # JWT authentication for protected routes
+│   └── errorHandler.js              # Global error handling middleware
+│
+├── routes
+│   ├── projectRoutes.js             # API routes for project management
+│   ├── fileRoutes.js                # API routes for file management
+│   └── authRoutes.js                # API routes for authentication
+│
+├── tests
+│   ├── auth.test.js                 # Tests for user authentication (register, login, profile)
+│   ├── project.test.js              # Tests for project management
+│   └── file.test.js                 # Tests for file management
+│
+├── utils
+│   ├── encryption.js                # Utility for file encryption and decryption
+│   ├── db.js                        # MongoDB connection logic
+│   └── responseFormatter.js         # Helper for consistent API responses
+│
+├── uploads                          # Temporary directory for file uploads
+│   └── README.md                    # Info or .gitignore for handling upload storage
+│
+├── .env                             # Environment variables (database URI, JWT secret, encryption keys)
+├── .gitignore                       # Ignored files (uploads, environment variables)
+├── app.js                           # Main app file to start Express server
+├── config.js                        # Configuration file for app settings
+├── package.json                     # Dependencies and npm scripts
+└── README.md                        # Documentation for the backend API

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Notarization Interface</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .split {
+            display: flex;
+        }
+
+        .gutter {
+            background-color: #eee;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter:hover {
+            background-color: #ddd;
+        }
+
+        .gutter.gutter-horizontal {
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+            cursor: col-resize;
+        }
+
+        /* Video Section */
+        .video-section {
+            background: #2c3e50;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .video-container {
+            background: #34495e;
+            border-radius: 8px;
+            aspect-ratio: 16/9;
+            min-height: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .video-controls {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .video-control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .video-control-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Document Viewer */
+        .document-viewer {
+            background: white;
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .document-toolbar {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .document-content {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            overflow: auto;
+        }
+
+        /* Document List */
+        .document-list {
+            background: white;
+            padding: 1rem;
+        }
+
+        .document-list-header {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+        }
+
+        .document-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .document-item:hover {
+            background: #f8f9fa;
+        }
+
+        .document-item.active {
+            background: #e9ecef;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="video-section" class="video-section">
+            <div class="video-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%234a5568'/%3E%3Ccircle cx='160' cy='70' r='40' fill='%23718096'/%3E%3Cpath d='M80 180 C80 120 240 120 240 180' fill='%23718096'/%3E%3C/svg%3E" alt="Notary">
+                <div class="video-overlay">Sarah Johnson (Notary)</div>
+                <div class="video-controls">
+                    <button class="video-control-btn">🎤</button>
+                    <button class="video-control-btn">📹</button>
+                </div>
+            </div>
+            <div class="video-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%234a5568'/%3E%3Ccircle cx='160' cy='70' r='40' fill='%23718096'/%3E%3Cpath d='M80 180 C80 120 240 120 240 180' fill='%23718096'/%3E%3C/svg%3E" alt="Signer 1">
+                <div class="video-overlay">John Smith (Signer)</div>
+                <div class="video-controls">
+                    <button class="video-control-btn">🎤</button>
+                    <button class="video-control-btn">📹</button>
+                </div>
+            </div>
+            <div class="video-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%234a5568'/%3E%3Ccircle cx='160' cy='70' r='40' fill='%23718096'/%3E%3Cpath d='M80 180 C80 120 240 120 240 180' fill='%23718096'/%3E%3C/svg%3E" alt="Signer 2">
+                <div class="video-overlay">Maria Garcia (Witness)</div>
+                <div class="video-controls">
+                    <button class="video-control-btn">🎤</button>
+                    <button class="video-control-btn">📹</button>
+                </div>
+            </div>
+        </div>
+        <div id="document-viewer" class="document-viewer">
+            <div class="document-toolbar">
+                <button class="btn">Sign</button>
+                <button class="btn">Annotate</button>
+                <button class="btn">Share</button>
+            </div>
+            <div class="document-content">
+                <img src="/api/placeholder/800/1000" alt="Document preview">
+            </div>
+        </div>
+        <div id="document-list" class="document-list">
+            <div class="document-list-header">
+                Documents
+            </div>
+            <div class="document-item active">
+                Contract.pdf
+            </div>
+            <div class="document-item">
+                Agreement.pdf
+            </div>
+            <div class="document-item">
+                Terms.pdf
+            </div>
+            <div class="document-item">
+                License.pdf
+            </div>
+        </div>
+    </div>
+
+    <script>
+        Split(['.video-section', '.document-viewer', '.document-list'], {
+            sizes: [20, 60, 20],
+            minSize: [200, 400, 200],
+            gutterSize: 8,
+        });
+
+        // Make document items clickable
+        document.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.document-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

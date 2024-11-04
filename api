@@ -1,0 +1,32 @@
+<?php
+
+include('.env');
+
+$in = $_REQUEST;
+$out = array();
+$link = mysqli_connect($env->db->host, $env->db->user, $env->db->pass, "mail");
+
+/* check connection */
+if (mysqli_connect_errno()) {
+      printf("Connect failed: %s\n", mysqli_connect_error());
+      exit();
+}
+
+if (!isset($in['q']) || ($in['q'] == "")) $in['q'] = "CONTENTS";
+
+if (isset($in['q'])) {
+    $out = [];
+    $in['q'] = preg_replace("/&/", '&amp;', $in['q']);
+    $in['q'] = preg_replace("/>/", '&gt;', $in['q']);
+    $in['q'] = preg_replace("/</", '&lt;', $in['q']);
+    $sql = "HELP '{$in['q']}'";
+    $results = mysqli_query($link, $sql);
+    while ($row = mysqli_fetch_object($results)) {
+        $out[] = $row;
+    }
+
+}
+header("Content-Type: application/json");
+print json_encode($out);
+
+
