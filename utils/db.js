@@ -1,6 +1,7 @@
+const app = require("../app");
 const mongoose = require("mongoose");
-
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/docchain";
+
 
 async function connectDB() {
     try {
@@ -14,4 +15,4 @@ async function connectDB() {
 
 connectDB();
 
-module.exports = { connectDB, mongoose};
+module.exports = { connectDB, mongoose };

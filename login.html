@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 2em;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 300px;
+        }
+        .login-container h2 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 1em;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.3em;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 0.5em;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .error-message, .success-message {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 1em;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://docchainnotary.com/img/docchain-banner.svg">
+<div class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <button type="submit">Login</button>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+    </form>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    // Get form data
+    const formData = new FormData(event.target);
+    const data = {
+        username: formData.get('username'),
+        password: formData.get('password')
+    };
+
+    try {
+        // Send login request to API
+        const response = await fetch('/api?x=login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        // Handle API response
+        if (response.ok && result.status === 'success') {
+            // Store the JWT token in localStorage
+            localStorage.setItem('jwtToken', result.token);
+
+            // Display success message
+            document.getElementById('successMessage').textContent = 'Login successful! Redirecting...';
+            document.getElementById('errorMessage').textContent = '';
+
+            // Redirect to another page or dashboard
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 1500);
+        } else {
+            // Display error message from the API
+            document.getElementById('errorMessage').textContent = result.error || 'Login failed. Please try again.';
+            document.getElementById('successMessage').textContent = '';
+        }
+    } catch (error) {
+        // Display network error message
+        document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
+        document.getElementById('successMessage').textContent = '';
+    }
+});
+</script>
+
+</body>
+</html>

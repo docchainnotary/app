@@ -1,0 +1,19 @@
+{
+    "name": "cdr/app",
+    "type": "project",
+    "require": {
+        "firebase/php-jwt": "^6.10",
+        "paragonie/sodium_compat": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cdr\\App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Christopher Robison",
+            "email": "cdr@netoasis.net"
+        }
+    ]
+}

@@ -48,6 +48,7 @@ app.use(errorHandler);
 
 // Define the PORT from .env or default to 3000
 const PORT = process.env.PORT || 3000;
+app.PORT = PORT;
 
 // Start the Server
 app.listen(PORT, () => {

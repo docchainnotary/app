@@ -1,10 +1,17 @@
+const { connectDB, mongoose } = require("../utils/db"); // Import connectDB and mongoose
 const request = require("supertest");
 const app = require("../app");
 
 let token;
 let projectId;
 
+afterAll(async () => {
+    await mongoose.connection.close();
+});
+
+
 beforeAll(async () => {
+    await connectDB();
     // Log in and retrieve token for authorized requests
     const res = await request(app)
         .post("/api/users/login")

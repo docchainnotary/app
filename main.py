@@ -15,11 +15,12 @@ with open('.env.json') as f:
 
 # Database Configuration
 db_config = config["db"]
+jwt_config = config["jwt"]
 
 # FastAPI and OAuth2 configuration
 app = FastAPI(title="DocChain Digital Notary Service API")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-SECRET_KEY = "your_secret_key"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token.php")
+SECRET_KEY = jwt_config["key"]
 ALGORITHM = "HS256"
 
 # MySQL Database Connection
@@ -27,8 +28,8 @@ def get_mysql_connection():
     return pymysql.connect(
         host=db_config["host"],
         user=db_config["user"],
-        password=db_config["password"],
-        database=db_config["database"]
+        password=db_config["pass"],
+        database=db_config["db"]
     )
 
 # Models

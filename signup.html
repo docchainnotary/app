@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .signup-container {
+            background-color: #fff;
+            padding: 2em;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 300px;
+        }
+        .signup-container h2 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 1em;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.3em;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 0.5em;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 1em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://docchainnotary.com/img/docchain-banner.svg">
+<div class="signup-container">
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" required>
+        </div>
+        <div class="form-group">
+            <button type="submit">Register</button>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+    </form>
+</div>
+
+<script>
+document.getElementById('signupForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const data = {
+        username: formData.get('username'),
+        password: formData.get('password'),
+        email: formData.get('email'),
+        full_name: formData.get('full_name')
+    };
+
+    try {
+        const response = await fetch('/api?x=register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert('Registration successful!');
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('errorMessage').textContent = result.error || 'Registration failed.';
+        }
+    } catch (error) {
+        document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
+    }
+});
+</script>
+
+</body>
+</html>

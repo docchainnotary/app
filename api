@@ -1,32 +1,291 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
-include('.env');
+$env = json_decode(file_get_contents(".env.json"));
 
-$in = $_REQUEST;
-$out = array();
-$link = mysqli_connect($env->db->host, $env->db->user, $env->db->pass, "mail");
+$in = json_decode(file_get_contents('php://input'));
 
-/* check connection */
+$out = [];
+$link = mysqli_connect($env->db->host, $env->db->user, $env->db->pass, $env->db->db);
+
 if (mysqli_connect_errno()) {
-      printf("Connect failed: %s\n", mysqli_connect_error());
-      exit();
+    printf("Connect failed: %s\n", mysqli_connect_error());
+    exit();
 }
 
-if (!isset($in['q']) || ($in['q'] == "")) $in['q'] = "CONTENTS";
+session_start();
 
-if (isset($in['q'])) {
+// Secret key for JWT (from .env.json or a secure source)
+$jwtSecretKey = $env->jwt->key;
+
+// Check for a valid JWT token except on login
+if (isset($_GET['x']) && ($_GET['x'] !== 'login') && ($_GET['x'] !== 'register')) {
+    $isTokenValid = validateJWT();
+    if (!$isTokenValid) {
+        header("Content-Type: application/json");
+        echo json_encode(["status" => "error", "error" => "Unauthorized or invalid token"]);
+        exit();
+    }
+}
+
+// 'x' is our action var
+if (isset($_GET['x'])) {
+    $out = match ($_GET['x']) {
+        "register" => register(),
+        "login" => login(),
+        "projects" => getProjects(),
+        "project" => getProject($_GET['id']),
+        "documents" => getDocuments(),
+        "document" => getDocument($_GET['id']),
+        "createDocument" => createDocument(),
+        "createVersion" => createDocumentVersion($_GET['id']),
+        "signDocument" => signDocument($_GET['id']),
+        "documentHistory" => getDocumentHistory($_GET['id']),
+        "approveVersion" => approveVersion($_GET['id']),
+        default => getProjects(),
+    };
+}
+if (!$out) $out = getProjects();
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+// If it's a preflight request, exit early
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+header("Content-Type: application/json");
+print json_encode($out);
+
+function validateJWT() {
+    global $jwtSecretKey;
+
+    // Check for the Authorization header
+    $headers = apache_request_headers();
+    if (!isset($headers['Authorization'])) {
+        return false;
+    }
+
+    // Extract the token from the "Bearer <token>" format
+    $authHeader = $headers['Authorization'];
+    if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        return false;
+    }
+    $jwt = $matches[1];
+
+    try {
+        // Decode and verify the JWT token
+        $decoded = JWT::decode($jwt, new Key($jwtSecretKey, 'HS256'));
+        // Optionally, you can return the decoded token data here
+        return true;
+    } catch (Exception $e) {
+        // Token is invalid or expired
+        return false;
+    }
+}
+
+function register() {
+    global $link;
+    global $in;
+
+    // Input validation
+    if (empty($in->username) || empty($in->password) || empty($in->email) || empty($in->full_name)) {
+        print_r($in);
+        return ["status" => "error", "error" => "All fields are required."];
+    }
+
+    // Sanitize input and hash password
+    $username = mysqli_real_escape_string($link, $in->username);
+    $password = hash('sha256', $in->password);
+    $email = mysqli_real_escape_string($link, $in->email);
+    $fullName = mysqli_real_escape_string($link, $in->full_name);
+
+    // Check if the username or email already exists
+    $checkQuery = "SELECT * FROM users WHERE username='$username' OR email='$email'";
+    $checkResult = mysqli_query($link, $checkQuery);
+
+    if (mysqli_num_rows($checkResult) > 0) {
+        return ["status" => "error", "error" => "Username or email already exists."];
+    }
+
+    // Insert the new user into the database
+    $sql = "INSERT INTO users (username, passwd, email, full_name, created_at) VALUES ('$username', '$password', '$email', '$fullName', NOW())";
+    if (mysqli_query($link, $sql)) {
+        return ["status" => "success", "message" => "Registration successful"];
+    } else {
+        return ["status" => "error", "error" => "Registration failed. Please try again."];
+    }
+}
+
+// Login function with JWT token generation
+function login() {
+    global $link, $in, $jwtSecretKey;
+
+    $username = mysqli_real_escape_string($link, $in->user);
+    $password = hash('sha256', $in->password);
+
+    $sql = "SELECT * FROM users WHERE username='" . mysqli_real_escape_string($link, $in->username) . "' AND passwd='" . mysqli_real_escape_string($link, hash('sha256', $in->password)) . "'";
+    $results = mysqli_query($link, $sql);
+
+    if ($user = mysqli_fetch_object($results)) {
+        // Generate JWT token
+        $token = generateJWT($user->username);
+
+        $_SESSION['user'] = $user;
+        $_SESSION['token'] = $token;
+
+        // Return the token along with user information
+        return [
+            "status" => "success",
+            "message" => "Login successful",
+            "token" => $token,
+            "user" => [
+                "username" => $user->username,
+                "email" => $user->email,
+                "full_name" => $user->full_name
+            ]
+        ];
+    } else {
+        return ["status" => "error", "error" => "Invalid username or password"];
+    }
+}
+
+// Generate JWT token
+function generateJWT($username) {
+    global $jwtSecretKey;
+
+    $payload = [
+        "sub" => $username,
+        "iat" => time(),
+        "exp" => time() + (60 * 60), // Token valid for 1 hour
+        "iss" => "your-application-name"
+    ];
+
+    return JWT::encode($payload, $jwtSecretKey, 'HS256');
+}
+
+function getProjects() {
+    global $link;
+    global $in;
+
+    $sql = "SELECT * FROM projects WHERE owner='" . mysqli_real_escape_string($link, $in->user) . "'";
     $out = [];
-    $in['q'] = preg_replace("/&/", '&amp;', $in['q']);
-    $in['q'] = preg_replace("/>/", '&gt;', $in['q']);
-    $in['q'] = preg_replace("/</", '&lt;', $in['q']);
-    $sql = "HELP '{$in['q']}'";
+
     $results = mysqli_query($link, $sql);
     while ($row = mysqli_fetch_object($results)) {
         $out[] = $row;
     }
-
+    return $out;
 }
-header("Content-Type: application/json");
-print json_encode($out);
 
+function getProject($id) {
+    global $link;
+    $id = mysqli_real_escape_string($link, $id);
 
+    $sql = "SELECT * FROM projects WHERE project_id='$id'";
+    $results = mysqli_query($link, $sql);
+
+    return mysqli_fetch_object($results);
+}
+
+function getDocument($id) {
+    global $link;
+    $id = mysqli_real_escape_string($link, $id);
+
+    $sql = "SELECT * FROM documents WHERE document_id='$id'";
+    $results = mysqli_query($link, $sql);
+
+    return mysqli_fetch_object($results);
+}
+
+function getDocuments() {
+    global $link;
+    global $in;
+
+    $sql = "SELECT * FROM documents WHERE owner='" . mysqli_real_escape_string($link, $in->user) . "'";
+    $out = [];
+
+    $results = mysqli_query($link, $sql);
+    while ($row = mysqli_fetch_object($results)) {
+        $out[] = $row;
+    }
+    return $out;
+}
+
+// Create a new document and notarize it
+function createDocument() {
+    global $link;
+    global $in;
+
+    $hash = hash("sha256", $in->content);
+    $sql = "INSERT INTO documents (hash, title, creator_id, created_at, signers) VALUES ('" . mysqli_real_escape_string($link, $hash) . "', '" . mysqli_real_escape_string($link, $in->title) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), '" . mysqli_real_escape_string($link, json_encode($in->signers)) . "')";
+
+    mysqli_query($link, $sql);
+    return ["status" => "Document created", "hash" => $hash];
+}
+
+// Create a new version of an existing document
+function createDocumentVersion($id) {
+    global $link;
+    global $in;
+
+    $hash = hash("sha256", $in->content);
+    $sql = "INSERT INTO document_versions (parent_id, hash, title, creator_id, timestamp, status) VALUES ('" . mysqli_real_escape_string($link, $id) . "', '" . mysqli_real_escape_string($link, $hash) . "', '" . mysqli_real_escape_string($link, $in->title) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), 'pending')";
+
+    mysqli_query($link, $sql);
+    return ["status" => "Version created", "version_hash" => $hash];
+}
+
+// Sign a document version
+function signDocument($id) {
+    global $link;
+    global $in;
+
+    $sql = "INSERT INTO signatures (document_id, signer_id, timestamp, signature_data) VALUES ('" . mysqli_real_escape_string($link, $id) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), '" . mysqli_real_escape_string($link, $in->signature_data) . "')";
+
+    mysqli_query($link, $sql);
+    return ["status" => "Document signed"];
+}
+
+// Get the history of a document's versions
+function getDocumentHistory($id) {
+    global $link;
+    $id = mysqli_real_escape_string($link, $id);
+
+    $sql = "SELECT * FROM document_versions WHERE parent_id='$id' ORDER BY timestamp DESC";
+    $results = mysqli_query($link, $sql);
+    $out = [];
+
+    while ($row = mysqli_fetch_object($results)) {
+        $out[] = $row;
+    }
+    return $out;
+}
+
+// Approve a document version if all signatures are present
+function approveVersion($id) {
+    global $link;
+    $id = mysqli_real_escape_string($link, $id);
+
+    // Check if all required signers have signed
+    $sql = "SELECT COUNT(*) AS signed_count FROM signatures WHERE document_id='$id'";
+    $result = mysqli_query($link, $sql);
+    $signedCount = mysqli_fetch_object($result)->signed_count;
+
+    // Retrieve required signers from document
+    $docQuery = mysqli_query($link, "SELECT JSON_LENGTH(signers) AS required_signers FROM documents WHERE document_id='$id'");
+    $requiredSigners = mysqli_fetch_object($docQuery)->required_signers;
+
+    if ($signedCount >= $requiredSigners) {
+        $updateSql = "UPDATE document_versions SET status='approved' WHERE hash='$id'";
+        mysqli_query($link, $updateSql);
+        return ["status" => "Version approved"];
+    } else {
+        return ["status" => "Not all signatures are present"];
+    }
+}
+?>
