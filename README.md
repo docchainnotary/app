@@ -33,21 +33,40 @@ To set up the DocChain application locally, follow these steps:
 
 4. **Configure Environment Variables**:
 
-   Create a `.env` file in the root directory with the following content:
+   Create a `.env.json` file in the servers root directory with the following content:
 
    ```
-   DB_HOST=localhost
-   DB_USER=your_db_user
-   DB_PASS=your_db_password
-   DB_NAME=docchain
-   JWT_SECRET=your_jwt_secret
+   {
+      "db": {
+          "host": "<<YOUR_DB_HOST>>",
+          "user": "<<YOUR_DB_USER>>",
+          "pass": "<<YOUR_DB_PASSWORD>>",
+          "db": "docchain"
+      },
+      "jwt": {
+          "key": "<<YOUR_JWT_SECRET>>",
+          "token": "<<YOUR_JWT_TOKEN>>"
+       }
+   }
    ```
 
-   Replace `your_db_user`, `your_db_password`, and `your_jwt_secret` with your actual database credentials and a secure JWT secret.
+   Replace `<<YOUR_DB_USER>>`, `<<YOUR_DB_PASSWORD>>`, `<<YOUR_JWT_SECRET>>` and `<<YOUR_JWT_TOKEN>>` with your actual database credentials and a secure JWT secret.
 
 5. **Initialize the Database**:
 
-   Ensure that your MySQL database is running and execute the provided SQL scripts to set up the necessary tables.
+   1. Ensure that your MySQL database is running 
+   2. Create the 'docchain' db:
+   ```bash
+   mysqladmin create docchain
+   ```
+   3. Execute the provided SQL setup scripts to create the necessary tables.
+   ```bash
+   cat src/setup.sql | mysql docchain
+   ```
+   4. [Optional] If you wish to populate your database with test data:
+   ```bash
+   cat src/docchain.sql | mysql docchain
+   ```
 
 6. **Start the Application**:
 

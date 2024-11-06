@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo-small.svg" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,7 +89,9 @@
         <div class="success-message" id="successMessage"></div>
     </form>
 </div>
-
+<div style="margin: 1em auto 2em auto;">
+    Don't have an account? <a href="/signup.html" title="Signup for Free!">Signup for Free!</a>
+</div>
 <script>
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -123,7 +126,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
             // Redirect to another page or dashboard
             setTimeout(() => {
-                window.location.href = '/dashboard.html';
+                window.location.href = '/';
             }, 1500);
         } else {
             // Display error message from the API
@@ -136,6 +139,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         document.getElementById('successMessage').textContent = '';
     }
 });
+(function() {
+    document.querySelector("#username").focus();
+})();
 </script>
 
 </body>

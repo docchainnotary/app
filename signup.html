@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signup Page</title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo-small.svg" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +12,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
             flex-direction: column;
         }
@@ -61,12 +61,21 @@
             margin-top: 1em;
             text-align: center;
         }
+        .form-group label.disclaimer {
+            font-weight: 300;
+            font-size: 12px;
+        }
+        .form-group.flexrow {
+            display: flex;
+            
+        }
     </style>
 </head>
 <body>
     <img src="https://docchainnotary.com/img/docchain-banner.svg">
 <div class="signup-container">
     <h2>Sign Up</h2>
+    <p style="font-size:0.7em;color:#666;">Complete and submit the form below to create your very own DocChain account. This free account gives you access to our suite of online document management tools.</p>
     <form id="signupForm">
         <div class="form-group">
             <label for="username">Username</label>
@@ -84,11 +93,22 @@
             <label for="full_name">Full Name</label>
             <input type="text" id="full_name" name="full_name" required>
         </div>
+        <div class="form-group flexrow">
+            <input type="checkbox" id="newsletter" name="newsletter">
+            <label class="disclaimer" for="newsletter">I would like to receive the newsletter with updates, tips, and industry news. You can unsubscribe at any time</label>
+        </div>
+        <div class="form-group flexrow">
+            <input type="checkbox" id="promotions" name="promotions">
+            <label class="disclaimer" for="promotions">I agree to receive promotional offers, discounts, and marketing communications. You can opt out at any time.</label>
+        </div>
         <div class="form-group">
             <button type="submit">Register</button>
         </div>
         <div class="error-message" id="errorMessage"></div>
     </form>
+</div>
+<div style="margin:1em auto 3em auto;">
+Already have an account? <a href="/login.html">Login here.</a>
 </div>
 
 <script>
@@ -123,6 +143,9 @@ document.getElementById('signupForm').addEventListener('submit', async function 
         document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
     }
 });
+(function() {
+    document.querySelector('#username').focus();
+})();
 </script>
 
 </body>
