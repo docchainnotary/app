@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Notarization Interface</title>
+    <title>Document Management Interface</title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo-small.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/brands.min.css" integrity="sha512-EJp8vMVhYl7tBFE2rgNGb//drnr1+6XKMvTyamMS34YwOEFohhWkGq13tPWnK0FbjSS6D8YoA3n3bZmb3KiUYA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js" integrity="sha512-6sSYJqDreZRZGkJ3b+YfdhB3MzmuP9R7X1QZ6g5aIXhRvR1Y/N/P47jmnkENm7YL3oqsmI6AK+V6AD99uWDnIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/brands.min.js" integrity="sha512-N5K6sQXjzT79tR16zvBu7B0AqvYtHKvk3+eKuQWoVNQDGU5kR9W8OP3CTYtm3vVM2EtObrmtm0Jup17F718OyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
     <style>
         * {
@@ -43,6 +49,130 @@
             cursor: col-resize;
         }
 
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .section {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .section-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .add-button {
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .add-button:hover {
+            background: #0056b3;
+        }
+
+        .list-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .list-item:hover {
+            background: #f8f9fa;
+        }
+
+        .list-item.active {
+            background: #e9ecef;
+        }
+
+        .list-item-icon {
+            margin-right: 0.75rem;
+            opacity: 0.5;
+        }
+
+        /* Navigation */
+        .nav-section {
+            border-top: 1px solid #dee2e6;
+            padding: 0.5rem 0;
+            background: #f8f9fa;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            color: #495057;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #e9ecef;
+        }
+
+        .nav-item-icon {
+            margin-right: 0.75rem;
+            opacity: 0.5;
+        }
+
+        /* Document Viewer */
+        .document-viewer {
+            background: white;
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .document-toolbar {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .document-content {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* Video Section */
         .video-section {
             background: #2c3e50;
@@ -50,6 +180,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            max-width: 300px;
         }
 
         .video-container {
@@ -103,58 +234,10 @@
             background: rgba(0, 0, 0, 0.7);
         }
 
-        /* Document Viewer */
-        .document-viewer {
-            background: white;
-            flex: 1;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .document-toolbar {
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .document-content {
-            flex: 1;
-            background: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 2rem;
-            overflow: auto;
-        }
-
-        /* Document List */
-        .document-list {
-            background: white;
-            padding: 1rem;
-        }
-
-        .document-list-header {
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6;
-            font-weight: bold;
-        }
-
-        .document-item {
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-        }
-
-        .document-item:hover {
-            background: #f8f9fa;
-        }
-
-        .document-item.active {
-            background: #e9ecef;
+        .video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* Buttons */
@@ -170,14 +253,207 @@
         .btn:hover {
             background: #0056b3;
         }
+        /* Add these styles to your existing stylesheet */
+
+.modal {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    padding: 0;
+}
+
+.modal-header {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    color: #666;
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+.form-group {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.form-group:last-of-type {
+    border-bottom: none;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 0.5rem 0;
+}
+
+.modal-footer {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    border-radius: 0 0 8px 8px;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+            .selected-project {
+                background: #0073ee;
+                color: #fff;
+            }
+            .selected-project:hover {
+                background: #0073ee99;
+            }
+            dialog {
+                margin: 1em auto;
+            }
+.btns {
+    font-size: 14px;
+    color: #999;
+    float: right;
+    display: none;
+}
+.list-item:hover .btns {
+    display: inline-block;
+}
+
+.btns a {
+    color: #999;
+    text-decoration: none;
+}
+.btns a:hover {
+    color:#f00;
+}
+            .selected-project:hover .btns a {
+                color: #fff;
+            }
     </style>
 </head>
 <body>
     <div class="container">
+        <div id="sidebar" class="sidebar">
+            <div class="section">
+                <div class="section-header">
+                    Projects
+                    <button class="add-button" title="Add Project">+</button>
+                </div>
+                <div id="projects-body" class="section-body">
+                    <div class="list-item active">
+                        <span class="list-item-icon">📁</span>
+                        Relationship PIP
+                    </div>
+                    <div class="list-item">
+                        <span class="list-item-icon">📁</span>
+                        Business Contract
+                    </div>
+                    <div class="list-item">
+                        <span class="list-item-icon">📁</span>
+                        Loan Contract
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    Documents
+                    <button class="add-button" title="Add Document">+</button>
+                </div>
+                <div id="documents-body" class="section-body">
+                    <div class="list-item active" onclick="app.loadDocument('1');return false;">
+                        <span class="list-item-icon">📄</span>
+                        Relationship Agreement.pdf
+                    </div>
+                    <div class="list-item">
+                        <span class="list-item-icon">📄</span>
+                        Disclosure Form.pdf
+                    </div>
+                    <div class="list-item">
+                        <span class="list-item-icon">📄</span>
+                        Title Insurance.pdf
+                    </div>
+                    <div class="list-item">
+                        <span class="list-item-icon">📄</span>
+                        Deed Transfer.pdf
+                    </div>
+                </div>
+            </div>
+            <div class="nav-section">
+                <a href="#" class="nav-item">
+                    <span class="nav-item-icon">👤</span>
+                    Account
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-item-icon">⚙️</span>
+                    Settings
+                </a>
+            </div>
+        </div>
+        <div id="document-viewer" class="document-viewer">
+            <div class="document-toolbar">
+                <button class="btn"><i class="fa-solid fa-upload"></i> Upload</button>
+                <button class="btn"><i class="fa-solid fa-hashtag"></i> Hash</button>
+                <button class="btn"><i class="fa-solid fa-pen-nib"></i> Sign</button>
+                <button class="btn"><i class="fa-solid fa-circle-exclamation"></i> Annotate</button>
+                <button class="btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                <button class="btn"><i class="fa-solid fa-floppy-disk"></i> Commit</button>
+            </div>
+            <div class="document-content">
+                <embed id="viewer" src="/uploads/cdr/Relationship-Contract.pdf" width="100%" height="100%" type="application/pdf">
+            </div>
+        </div>
         <div id="video-section" class="video-section">
             <div class="video-container">
-                <video src="lady-listening.mov" autoplay muted width="300">
-                </video>
+                <video class="video" src="img/lady-listening.mp4" muted loop autoplay width="250"></video>
                 <div class="video-overlay">Sarah Johnson (Notary)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
@@ -185,8 +461,7 @@
                 </div>
             </div>
             <div class="video-container">
-                <video src="img/man-listening.mp4" autoplay muted width="300">
-                </video>
+                <video class="video" src="img/man-listening.mp4" muted loop autoplay width="250"></video>
                 <div class="video-overlay">John Smith (Signer)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
@@ -194,7 +469,7 @@
                 </div>
             </div>
             <div class="video-container">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%234a5568'/%3E%3Ccircle cx='160' cy='70' r='40' fill='%23718096'/%3E%3Cpath d='M80 180 C80 120 240 120 240 180' fill='%23718096'/%3E%3C/svg%3E" alt="Signer 2">
+                <video class="video" src="img/woman2-listening.mp4" muted loop autoplay width="250"></video>
                 <div class="video-overlay">Maria Garcia (Witness)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
@@ -202,49 +477,396 @@
                 </div>
             </div>
         </div>
-        <div id="document-viewer" class="document-viewer">
-            <div class="document-toolbar">
-                <button class="btn">Sign</button>
-                <button class="btn">Annotate</button>
-                <button class="btn">Share</button>
-            </div>
-            <div class="document-content">
-                <img src="/img/1000.png" alt="Document preview">
-            </div>
-        </div>
-        <div id="document-list" class="document-list">
-            <div class="document-list-header">
-                Documents
-            </div>
-            <div class="document-item active">
-                Contract.pdf
-            </div>
-            <div class="document-item">
-                Agreement.pdf
-            </div>
-            <div class="document-item">
-                Terms.pdf
-            </div>
-            <div class="document-item">
-                License.pdf
-            </div>
-        </div>
     </div>
+<!-- Add these dialog elements just before the closing body tag -->
 
+<!-- New Project Dialog -->
+<dialog id="newProjectDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Project</h3>
+            <button class="close-button" onclick="app.closeProjectDialog()">&times;</button>
+        </div>
+        <form id="newProjectForm" onsubmit="app.handleProjectSubmit(event)">
+            <input type="hidden" id="project_id" name="project_id" value="" />
+            <div class="form-group">
+                <label for="title">Project Title</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="projectDescription">Description</label>
+                <textarea id="projectDescription" name="description" rows="3"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="app.closeProjectDialog()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><span id="project_btn_action">Create</span> Project</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<!-- New Document Dialog -->
+<dialog id="newDocumentDialog" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Document</h3>
+            <button class="close-button" onclick="app.closeDocumentDialog()">&times;</button>
+        </div>
+        <form id="newDocumentForm" onsubmit="app.handleDocumentSubmit(event)">
+            <input type="hidden" id="document_id" name="document_id" value="" />
+            <input type="hidden" id="document_project_id" name="project_id" value="" />
+            <div class="form-group">
+                <label for="doctitle">Document Name</label>
+                <input type="text" id="doctitle" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="documentType">Document Type</label>
+                <select id="documentType" name="documentType" required>
+                    <option value="">Select a type...</option>
+                    <option value="contract">Contract</option>
+                    <option value="agreement">Agreement</option>
+                    <option value="deed">Deed</option>
+                    <option value="disclosure">Disclosure</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documentDescription">Description</label>
+                <textarea id="documentDescription" name="description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="documentFile">Upload File</label>
+                <input type="file" id="documentFile" name="file" accept=".pdf,.doc,.docx" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="app.closeDocumentDialog()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><span id="document_btn_action">Upload</span> Document</button>
+            </div>
+        </form>
+    </div>
+</dialog>
     <script>
-        Split(['.video-section', '.document-viewer', '.document-list'], {
+        Split(['.sidebar', '.document-viewer', '.video-section'], {
             sizes: [20, 60, 20],
-            minSize: [200, 400, 200],
+            minSize: [250, 400, 200],
             gutterSize: 8,
         });
 
-        // Make document items clickable
-        document.querySelectorAll('.document-item').forEach(item => {
+        // Make list items clickable
+        document.querySelectorAll('.list-item').forEach(item => {
             item.addEventListener('click', () => {
-                document.querySelectorAll('.document-item').forEach(i => i.classList.remove('active'));
+                // Only set active within the same section
+                const section = item.closest('.section');
+                section.querySelectorAll('.list-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
             });
         });
     </script>
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+
+    let app = {
+        data: {
+            projects: [],
+            documents: [],
+        },
+        state: {
+            user: '',
+            currentDoc: 1,
+            currentProject: 1,
+        },
+        async init() {
+            app.data.cookies = await app.parseCookies();
+            if (!app.data.cookies.token) {
+                document.location.href = "/login.html";
+            }
+            
+            // Update the click handlers for the add buttons
+            // Project add button
+            const projectAddBtn = document.querySelector('.section-header .add-button');
+            if (projectAddBtn) {
+                projectAddBtn.onclick = app.newProject;
+            }
+
+            // Document add button
+            const documentAddBtn = document.querySelectorAll('.section-header .add-button')[1];
+            if (documentAddBtn) {
+                documentAddBtn.onclick = app.newDocument;
+            }
+
+            app.getProjects(1);
+            app.getDocuments(1);
+        },
+        newProject() {
+            
+            $("#project_id").value = "";
+            $("#title").value = "";
+            $("#projectDescription").value = "";
+            $("#project_btn_action").innerHTML = "Create";
+
+            app.showProjectDialog();
+
+        },
+        newDocument() {
+            $("#document_id").value = "";
+            $("#doctitle").value = "";
+            $("#documentType").value = "";
+            $("#documentDescription").value = "";
+            $("#documentFile").value = "";
+            $("#document_btn_action").innerHTML = "Create";
+            $("#document_project_id").value = app.state.currentProject;
+
+            app.showDocumentDialog();
+        },
+        async parseCookies() {
+            let items = ['username', 'user_id', 'token'];
+            
+            let out = {};
+            for (let item of items) {
+                out[item] = await window.cookieStore.get(item);
+            }
+            return out;
+        },
+        getProjects(auto=0) {
+            fetch("/api?x=projects", {
+              headers: { 
+                  Authorization: 'Bearer ' + app.data.cookies.token.value 
+              }
+            }).then(r=>r.json()).then(data=>{
+
+                console.log('getProjects');
+                console.dir(data);
+                
+                if (data.status && data.status == "error") {
+                    if (data.redirect) {
+                        document.location.href = data.redirect;
+                    }
+                } else {
+                    app.data.projects = data;
+                    app.updateProjects(data);
+                    if (auto) {
+                        app.loadProject(data[0].project_id);
+                    }
+                }
+            });
+        },
+        loadProject(pid) {
+            $(".selected-project")?.classList.remove("selected-project");
+            $(`#pid_${pid}`).classList.add('selected-project');
+            app.state.currentProject = pid;
+            app.getDocuments(pid);
+        },
+        updateProjects(data) {
+            if (data) {
+                out = "";
+                data.forEach(item=>{
+                    out += `<div id="pid_${item.project_id}" class="list-item" onclick="app.loadProject('${item.project_id}')">
+                        <span class="item">
+                            <span class="list-item-icon">📁</span> ${item.title}
+                        </span>
+                        <span class="btns"><a href="#edit" onclick="app.editProject('${item.project_id}');return false;"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="#del" onclick="app.rmProject('${item.project_id}');return false;"><i class="fa-solid fa-trash-can"></i></a>
+                        </div>`;
+                });
+                $("#projects-body").innerHTML = out;
+            }
+        },
+        editProject(pid) {
+            let proj = app.data.projects.filter(i=>i.project_id==pid)[0];
+            console.log(`editProject: ${pid}`);
+console.dir(proj);
+            if (proj) {
+                $("#title").value = proj.title;
+                $("#projectDescription").value = proj.description;
+                $("#project_id").value = proj.project_id;
+                $("#project_btn_action").innerHTML = "Update";
+                app.showProjectDialog();
+            }
+        },
+        rmProject(pid) {
+            if (confirm("Are you sure you want to permanently delete Project ID "+pid+"?")) {
+                fetch(`/api?x=rmProject&project_id=${pid}`, {
+                  headers: { Authorization: 'Bearer ' + app.data.cookies.token.value }
+                }).then(r=>r.json()).then(data=>{
+                    console.log('rmProject');
+                    console.dir(data);
+                    $(`#pid_${pid}`).parentNode.removeChild($(`#pid_${pid}`));
+                });
+                 
+            }
+        },
+        getDocuments(pid) {
+            fetch(`/api?x=documents&project_id=${pid}`, {
+              headers: { Authorization: 'Bearer ' + app.data.cookies.token.value }
+            }).then(r=>r.json()).then(data=>{
+                console.log('getDocuments');
+                console.dir(data);
+                app.data.documents = data;
+                app.updateDocuments(data);
+            });
+        },
+        updateDocuments(data) {
+            if (data) {
+                let out = "";
+                data.forEach(item=>{
+                    if (item.document_id) {
+                        out += `<div id="doc_${item.document_id}" class="list-item" onclick="app.loadDocument(${item.document_id});return false;">
+                            <span class="list-item">
+                                <span class="list-item-icon">📄</span> ${item.filename}
+                            </span>
+                            <span class="btns"><a href="#edit" onclick="app.editDocument('${item.document_id}');return false;"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <a href="#del" onclick="app.rmDocument('${item.document_id}');return false;"><i class="fa-solid fa-trash-can"></i></a>
+
+                            </div>`;
+                    }
+                });
+                $("#documents-body").innerHTML = out;
+            }
+        },
+        rmProject(did) {
+            if (confirm("Are you sure you want to permanently delete Document ID "+did+"?")) {
+                fetch(`/api?x=rmDocument&document_id=${did}`, {
+                  headers: { Authorization: 'Bearer ' + app.data.cookies.token.value }
+                }).then(r=>r.json()).then(data=>{
+                    console.log('rmDocument');
+                    console.dir(data);
+                    $(`#doc_${did}`).parentNode.removeChild($(`#doc_${did}`));
+                });
+                 
+            }
+        },
+         loadDocument(id) {
+            let doc = app.data.documents.filter(item=>item.document_id == id);
+            if (doc) {
+                console.log(`viewing ${doc[0].path}${doc[0].filename}`);
+                let xtra = '';
+                if (doc[0].filename.match(/pdf$/)) {
+                    xtra = '#page=1&zoom=100%';
+                }
+                $("#viewer").src = doc[0].path + doc[0].filename + xtra;
+                app.state.currentDocument = id;
+            }
+        },
+        editDocument(did) {
+            let doc = app.data.documents.filter(i=>i.document_id==did)[0];
+
+            if (doc) {
+                $("#doctitle").value = doc.title;
+                $("#documentDescription").value = doc.description;
+                $("#documentType").value = doc.doctype;
+                $("#document_id").value = doc.document_id;
+                $("#document_btn_action").innerHTML = "Update";
+
+                app.showDocumentDialog();
+            }
+        },
+ 
+        upload() {
+
+        },
+        // hash(DOCUMENT) - Returns a SHA256 hash of the passed document
+        async hash(doc) {
+            // encode as UTF-8
+            const msgBuffer = new TextEncoder().encode(doc);
+
+            // hash the document
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+            // convert ArrayBuffer to Array
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+            // convert bytes to hex string                  
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        },
+        // Dialog control functions
+        showProjectDialog() {
+            const dialog = document.getElementById('newProjectDialog');
+            dialog.showModal();
+        },
+        closeProjectDialog() {
+            const dialog = document.getElementById('newProjectDialog');
+            dialog.close();
+            document.getElementById('newProjectForm').reset();
+        },
+        showDocumentDialog() {
+            const dialog = document.getElementById('newDocumentDialog');
+            dialog.showModal();
+        },
+        closeDocumentDialog() {
+            const dialog = document.getElementById('newDocumentDialog');
+            dialog.close();
+            document.getElementById('newDocumentForm').reset();
+        },
+
+        // Form submission handlers
+        async handleProjectSubmit(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const projectData = Object.fromEntries(formData.entries());
+            const pid = $("#project_id").value;
+            
+            let action = (pid) ? 'update' : 'new';
+
+            try {
+                const response = await fetch(`/api?x=${action}Project`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + app.data.cookies.token.value
+                    },
+                    body: JSON.stringify(projectData)
+                });
+
+                if (!response.ok) throw new Error('Failed to create project');
+
+                // Refresh projects list
+                app.getProjects();
+                
+                app.closeProjectDialog();
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert(`${action} project failed. Please try again.`);
+            }
+        },
+
+        async handleDocumentSubmit(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const did = $("#document_id").value;
+            
+            let action = (did) ? 'update' : 'new';
+
+
+            try {
+                const response = await fetch('/api?x=upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + app.data.cookies.token.value
+                    },
+                    body: formData // Send form data directly for file upload
+                });
+
+                if (!response.ok) throw new Error('Failed to upload document');
+
+                // Refresh documents list
+                app.getDocuments(app.state.currentProject);
+                app.closeDocumentDialog();
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                alert(`${action} document failed. Please try again.`);
+            }
+        }
+
+    };
+    window.app = app;
+    app.init();
+
+})();
+</script>
 </body>
 </html>
