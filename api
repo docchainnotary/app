@@ -25,10 +25,11 @@ if (isset($_GET['x']) && ($_GET['x'] !== 'login') && ($_GET['x'] !== 'register')
     $isTokenValid = validateJWT();
     if (!$isTokenValid) {
         header("Content-Type: application/json");
-        echo json_encode(["status" => "error", "error" => "Unauthorized or invalid token"]);
+        echo json_encode(["status" => "error", "error" => "Unauthorized or invalid token", "redirect" => "/login.html" ]);
         exit();
     }
 }
+
 
 // 'x' is our action var
 if (isset($_GET['x'])) {
@@ -37,8 +38,13 @@ if (isset($_GET['x'])) {
         "login" => login(),
         "projects" => getProjects(),
         "project" => getProject($_GET['id']),
-        "documents" => getDocuments(),
+        "newProject" => createProject($_GET['username']),
+        "updateProject" => updateProject(),
+        "rmProject" => removeProject(),
+        "documents" => getDocuments($_GET['project_id']),
         "document" => getDocument($_GET['id']),
+        "updateDocument" => updateDocument(),
+        "upload" => upload(),
         "createDocument" => createDocument(),
         "createVersion" => createDocumentVersion($_GET['id']),
         "signDocument" => signDocument($_GET['id']),
@@ -69,7 +75,6 @@ function validateJWT() {
     if (!isset($headers['Authorization'])) {
         return false;
     }
-
     // Extract the token from the "Bearer <token>" format
     $authHeader = $headers['Authorization'];
     if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -99,10 +104,10 @@ function register() {
     }
 
     // Sanitize input and hash password
-    $username = mysqli_real_escape_string($link, $in->username);
+    $username = quote($in->username);
     $password = hash('sha256', $in->password);
-    $email = mysqli_real_escape_string($link, $in->email);
-    $fullName = mysqli_real_escape_string($link, $in->full_name);
+    $email = quote($in->email);
+    $fullName = quote($in->full_name);
 
     // Check if the username or email already exists
     $checkQuery = "SELECT * FROM users WHERE username='$username' OR email='$email'";
@@ -125,10 +130,10 @@ function register() {
 function login() {
     global $link, $in, $jwtSecretKey;
 
-    $username = mysqli_real_escape_string($link, $in->user);
+    $username = quote($in->user);
     $password = hash('sha256', $in->password);
 
-    $sql = "SELECT * FROM users WHERE username='" . mysqli_real_escape_string($link, $in->username) . "' AND passwd='" . mysqli_real_escape_string($link, hash('sha256', $in->password)) . "'";
+    $sql = "SELECT * FROM users WHERE username='" . quote($in->username) . "' AND passwd='" . quote(hash('sha256', $in->password)) . "'";
     $results = mysqli_query($link, $sql);
 
     if ($user = mysqli_fetch_object($results)) {
@@ -136,7 +141,13 @@ function login() {
         $token = generateJWT($user->username);
 
         $_SESSION['user'] = $user;
+        $_SESSION['username'] = $user->username;
         $_SESSION['token'] = $token;
+        $_SESSION['user_id'] = $user->user_id;
+        
+        setcookie('user', $user->username, time() + (86400 * 30), "/");
+        setcookie('user_id', $user->user_id, time() + (86400 * 30), "/");
+        setcookie('token', $token, time() + (86400 * 30), "/");
 
         // Return the token along with user information
         return [
@@ -162,7 +173,7 @@ function generateJWT($username) {
         "sub" => $username,
         "iat" => time(),
         "exp" => time() + (60 * 60), // Token valid for 1 hour
-        "iss" => "your-application-name"
+        "iss" => "docchainnotary"
     ];
 
     return JWT::encode($payload, $jwtSecretKey, 'HS256');
@@ -171,8 +182,9 @@ function generateJWT($username) {
 function getProjects() {
     global $link;
     global $in;
+    global $_SESSION;
 
-    $sql = "SELECT * FROM projects WHERE owner='" . mysqli_real_escape_string($link, $in->user) . "'";
+    $sql = "SELECT * FROM projects WHERE owner='" . quote($_SESSION['username']) . "'";
     $out = [];
 
     $results = mysqli_query($link, $sql);
@@ -182,9 +194,88 @@ function getProjects() {
     return $out;
 }
 
+function createProject() {
+    global $link;
+    global $in;
+    global $_GET;
+    global $_SESSION;
+    
+    $out = new stdClass();
+
+    $sql = "INSERT INTO projects (owner, title, description) values ('".quote($_SESSION['username'])."', '".quote($in->title)."','".$in->description."')";
+    $results = mysqli_query($sql);
+    
+    if ($results) {
+        $id = mysqli_insert_id($link);
+        $res = mysqli_query("select * from projects where project_id='{$id}'");
+        $obj = mysqli_fetch_object($res);
+        $out->result = $obj;
+        $out->status = "ok";
+        $out->new_id = $id;
+    }
+    return $out;
+}
+
+function rmProject() {
+    global $link;
+    global $in;
+    global $_SESSION;
+    global $_GET;
+    
+    $id = (isset($_GET)) ? $_GET['project_id'] : 0;
+    $out = [];
+    
+    if ($id) {
+        $sql = "DELETE FROM projects WHERE project_id='" . quote($id) . "'";
+        $results = mysqli_query($link, $sql);
+        $affected = mysqli_affected_rows($link);
+
+        $out["status"] = "ok";
+        $out["msg"] = "{$affected} record removed successfully [{$id}].";
+    } else {
+        $out["status"] = "error";
+        $out["msg"] = "Invalid project ID given for removal.";
+    }
+
+    return $out;
+}
+
+
+function upload() {
+    global $link;
+    global $in;
+    global $_REQUEST;
+    global $_SESSION;
+    global $_FILES;
+
+    $path = "uploads/".$_SESSION['username']."/";
+    $file = $_FILES['file']['name'];
+    if (file_exists($path)) {
+        move_uploaded_file($_FILES['file']['tmp_name'], $path.$_FILES['file']['name']);
+    }
+    
+    $in = (object)$_REQUEST;
+    $in->content = file_get_contents($path.$name);
+    $hash = hash("sha256", $in->content);
+    
+    $sql = "INSERT INTO documents (hash, title, creator_id, created_at, signers, project_id, path, filename) VALUES ('" . quote($hash) . "', '" . quote($in->title) . "', '" . quote($_SESSION['user_id']) . "', NOW(), '[]', '{$in->project_id}', '{$path}', '{$file}')";
+
+    mysqli_query($link, $sql);
+   
+    $id = mysqli_insert_id($link);
+
+    $out = new stdClass();
+    if ($id) {
+        $out->status = "ok";
+        $out->document_id = $id;
+    }
+    return $out;
+}
+
 function getProject($id) {
     global $link;
-    $id = mysqli_real_escape_string($link, $id);
+    global $_SESSION;
+    $id = quote($id);
 
     $sql = "SELECT * FROM projects WHERE project_id='$id'";
     $results = mysqli_query($link, $sql);
@@ -192,9 +283,47 @@ function getProject($id) {
     return mysqli_fetch_object($results);
 }
 
+function quote($str) {
+    global $link;
+
+    return mysqli_real_escape_string($link, $str);
+}
+
+function updateProject() {
+    global $link;
+    global $in;
+    global $_SESSION;
+
+    $vals = [];
+    $pid = $in->project_id;
+
+    if (isset($in->title)) {
+        $vals[] = "title='".quote($in->title)."'";
+    }
+    
+    if (isset($in->description)) {
+        $vals [] = "description='" .quote($in->description)."'";
+    }
+    $out = new stdClass();
+    $out->status = "";
+
+    if (count($vals)) {
+        $sql = "UPDATE projects set ".join(", ", $vals)." WHERE project_id='$pid'"; 
+        $result = mysqli_query($link, $sql);
+        $rows = mysqli_affected_rows($link);
+        $out->status = "ok";
+        $out->msg = "Updated project_id {$pid} ($rows records affected)";
+    } else {
+        $out->status = "error";
+        $out->msg = "Error: nothing to update";
+    }
+    return $out;
+}
+
+
 function getDocument($id) {
     global $link;
-    $id = mysqli_real_escape_string($link, $id);
+    $id = quote($id);
 
     $sql = "SELECT * FROM documents WHERE document_id='$id'";
     $results = mysqli_query($link, $sql);
@@ -205,13 +334,20 @@ function getDocument($id) {
 function getDocuments() {
     global $link;
     global $in;
+    global $_GET;
+    global $_SESSION;
 
-    $sql = "SELECT * FROM documents WHERE owner='" . mysqli_real_escape_string($link, $in->user) . "'";
     $out = [];
+    if (isset($_GET['project_id'])) {
+        $sql = "SELECT * FROM documents WHERE project_id='" . quote($_GET['project_id']) . "'";
 
-    $results = mysqli_query($link, $sql);
-    while ($row = mysqli_fetch_object($results)) {
-        $out[] = $row;
+        $results = mysqli_query($link, $sql);
+
+        if ($results) {
+            while ($row = mysqli_fetch_object($results)) {
+                $out[] = $row;
+            }
+        }
     }
     return $out;
 }
@@ -222,7 +358,7 @@ function createDocument() {
     global $in;
 
     $hash = hash("sha256", $in->content);
-    $sql = "INSERT INTO documents (hash, title, creator_id, created_at, signers) VALUES ('" . mysqli_real_escape_string($link, $hash) . "', '" . mysqli_real_escape_string($link, $in->title) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), '" . mysqli_real_escape_string($link, json_encode($in->signers)) . "')";
+    $sql = "INSERT INTO documents (hash, title, creator_id, created_at, signers, project_id) VALUES ('" . quote($hash) . "', '" . quote($in->title) . "', '" . quote($in->user) . "', NOW(), '" . quote(json_encode($in->signers)) . "', '{$in->project}', '{$in->project_id}')";
 
     mysqli_query($link, $sql);
     return ["status" => "Document created", "hash" => $hash];
@@ -234,7 +370,7 @@ function createDocumentVersion($id) {
     global $in;
 
     $hash = hash("sha256", $in->content);
-    $sql = "INSERT INTO document_versions (parent_id, hash, title, creator_id, timestamp, status) VALUES ('" . mysqli_real_escape_string($link, $id) . "', '" . mysqli_real_escape_string($link, $hash) . "', '" . mysqli_real_escape_string($link, $in->title) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), 'pending')";
+    $sql = "INSERT INTO document_versions (parent_id, hash, title, creator_id, timestamp, status) VALUES ('" . quote($id) . "', '" . quote($hash) . "', '" . quote($in->title) . "', '" . quote($in->user) . "', NOW(), 'pending')";
 
     mysqli_query($link, $sql);
     return ["status" => "Version created", "version_hash" => $hash];
@@ -245,7 +381,7 @@ function signDocument($id) {
     global $link;
     global $in;
 
-    $sql = "INSERT INTO signatures (document_id, signer_id, timestamp, signature_data) VALUES ('" . mysqli_real_escape_string($link, $id) . "', '" . mysqli_real_escape_string($link, $in->user) . "', NOW(), '" . mysqli_real_escape_string($link, $in->signature_data) . "')";
+    $sql = "INSERT INTO signatures (document_id, signer_id, timestamp, signature_data) VALUES ('" . quote($id) . "', '" . quote($in->user) . "', NOW(), '" . quote($in->signature_data) . "')";
 
     mysqli_query($link, $sql);
     return ["status" => "Document signed"];
@@ -254,7 +390,7 @@ function signDocument($id) {
 // Get the history of a document's versions
 function getDocumentHistory($id) {
     global $link;
-    $id = mysqli_real_escape_string($link, $id);
+    $id = quote($id);
 
     $sql = "SELECT * FROM document_versions WHERE parent_id='$id' ORDER BY timestamp DESC";
     $results = mysqli_query($link, $sql);
@@ -269,7 +405,7 @@ function getDocumentHistory($id) {
 // Approve a document version if all signatures are present
 function approveVersion($id) {
     global $link;
-    $id = mysqli_real_escape_string($link, $id);
+    $id = quote($id);
 
     // Check if all required signers have signed
     $sql = "SELECT COUNT(*) AS signed_count FROM signatures WHERE document_id='$id'";
@@ -287,5 +423,18 @@ function approveVersion($id) {
     } else {
         return ["status" => "Not all signatures are present"];
     }
+}
+
+// Logs every action for each user each document in every project
+function logAction($pid, $doc_id, $action, $request, $result, $status) {
+    global $link;
+    
+    $user = $_SESSION['user'];
+    
+    $sql = "INSERT INTO ledger (user_id, project_id, document_id, action, request, result, status, created_at) values ('{$_SESSION['user']}', '{$pid}', '{$docid}', '{$action}', '{$request}', '{$result}', '{$status}', now())";
+    
+    $result = mysqli_query($link, $sql);
+
+    return $result;
 }
 ?>
