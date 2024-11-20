@@ -203,11 +203,11 @@ function createProject() {
     $out = new stdClass();
 
     $sql = "INSERT INTO projects (owner, title, description) values ('".quote($_SESSION['username'])."', '".quote($in->title)."','".$in->description."')";
-    $results = mysqli_query($sql);
+    $results = mysqli_query($link, $sql);
     
     if ($results) {
         $id = mysqli_insert_id($link);
-        $res = mysqli_query("select * from projects where project_id='{$id}'");
+        $res = mysqli_query($link, "select * from projects where project_id='{$id}'");
         $obj = mysqli_fetch_object($res);
         $out->result = $obj;
         $out->status = "ok";
