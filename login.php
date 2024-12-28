@@ -1,6 +1,6 @@
 <?php
 // Configuration
-$tokenUrl = "http://localhost:8000/token";
+$tokenUrl = "https://thegivehub.com/token.php";
 
 // Function to prompt for user input if not provided in URL parameters
 function prompt($prompt_msg) {

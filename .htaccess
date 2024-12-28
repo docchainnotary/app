@@ -6,3 +6,4 @@
     ForceType application/x-httpd-php
 </Files>
 
+Options +Indexes

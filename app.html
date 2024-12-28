@@ -29,6 +29,57 @@
             height: 100vh;
             background: #f5f5f5;
         }
+        /* New collapse/expand button styles */
+        .collapse-btn {
+            position: absolute;
+            width: 20px;
+            height: 60px;
+            background: #2c3e50;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .collapse-btn:hover {
+            opacity: 1;
+        }
+
+        .collapse-btn.left {
+            right: -20px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .collapse-btn.right {
+            left: -20px;
+            border-radius: 4px 0 0 4px;
+        }
+
+        /* Panel transition styles */
+        .sidebar, .video-section {
+            transition: max-width 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            max-width: 0 !important;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .video-section.collapsed {
+            max-width: 0 !important;
+            padding: 0;
+            overflow: hidden;
+        }
+
 
         .split {
             display: flex;
@@ -383,6 +434,7 @@
 <body>
     <div class="container">
         <div id="sidebar" class="sidebar">
+            <button class="collapse-btn left" onclick="app.toggleSidebar()">⬅</button>
             <div class="section">
                 <div class="section-header">
                     Projects
@@ -452,17 +504,26 @@
             </div>
         </div>
         <div id="video-section" class="video-section">
+        <div class="status" id="status">Disconnected</div>
+        <div class="controls">
+            <input type="text" id="roomId" placeholder="Enter room ID">
+            <button id="createBtn">Create</button>
+            <button id="joinBtn">Join</button>
+            <button id="hangupBtn" disabled>Hang Up</button>
+        </div>
+ 
+            <button class="collapse-btn right" onclick="app.toggleVideoPanel()">➡</button>
             <div class="video-container">
-                <video class="video" src="img/lady-listening.mp4" muted loop autoplay width="250"></video>
-                <div class="video-overlay">Sarah Johnson (Notary)</div>
+                <video id="remoteVideo" class="video" muted autoplay playsinline width="250"></video>
+                <div id="video-remote-txt" class="video-overlay">(Signer)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
                     <button class="video-control-btn">📹</button>
                 </div>
             </div>
             <div class="video-container">
-                <video class="video" src="img/man-listening.mp4" muted loop autoplay width="250"></video>
-                <div class="video-overlay">John Smith (Signer)</div>
+                <video id="localVideo" autoplay playsinline class="video" muted width="250"></video>
+                <div id="video-self-txt" class="video-overlay">(Signer)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
                     <button class="video-control-btn">📹</button>
@@ -470,7 +531,7 @@
             </div>
             <div class="video-container">
                 <video class="video" src="img/woman2-listening.mp4" muted loop autoplay width="250"></video>
-                <div class="video-overlay">Maria Garcia (Witness)</div>
+                <div class="video-overlay">Maria Garcia (Notary)</div>
                 <div class="video-controls">
                     <button class="video-control-btn">🎤</button>
                     <button class="video-control-btn">📹</button>
@@ -478,7 +539,6 @@
             </div>
         </div>
     </div>
-<!-- Add these dialog elements just before the closing body tag -->
 
 <!-- New Project Dialog -->
 <dialog id="newProjectDialog" class="modal">
@@ -546,12 +606,13 @@
     </div>
 </dialog>
     <script>
+        /*
         Split(['.sidebar', '.document-viewer', '.video-section'], {
             sizes: [20, 60, 20],
             minSize: [250, 400, 200],
             gutterSize: 8,
         });
-
+        */
         // Make list items clickable
         document.querySelectorAll('.list-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -595,7 +656,7 @@
             if (documentAddBtn) {
                 documentAddBtn.onclick = app.newDocument;
             }
-
+            app.initializeSplit();
             app.getProjects(1);
             app.getDocuments(1);
         },
@@ -860,13 +921,53 @@ console.dir(proj);
                 console.error('Error uploading document:', error);
                 alert(`${action} document failed. Please try again.`);
             }
-        }
+        },
+        toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const button = sidebar.querySelector('.collapse-btn');
+            
+            sidebar.classList.toggle('collapsed');
+            button.innerHTML = sidebar.classList.contains('collapsed') ? '➡' : '⬅';
+            
+            // Recalculate Split.js sizes
+            if (sidebar.classList.contains('collapsed')) {
+                app.splitInstance.setSizes([0, 80, 20]);
+            } else {
+                app.splitInstance.setSizes([20, 60, 20]);
+            }
+        },
+        toggleVideoPanel() {
+            const videoSection = document.getElementById('video-section');
+            const button = videoSection.querySelector('.collapse-btn');
+            
+            videoSection.classList.toggle('collapsed');
+            button.innerHTML = videoSection.classList.contains('collapsed') ? '⬅' : '➡';
+            
+            // Recalculate Split.js sizes
+            if (videoSection.classList.contains('collapsed')) {
+                app.splitInstance.setSizes([20, 80, 0]);
+            } else {
+                app.splitInstance.setSizes([20, 60, 20]);
+            }
+        },
+        initializeSplit() {
+            if (app.splitInstance) {
+                app.splitInstance.destroy();
+            }
 
+            app.splitInstance = Split(['.sidebar', '.document-viewer', '.video-section'], {
+                sizes: [20, 60, 20],
+                minSize: [0, 400, 0],
+                gutterSize: 8,
+            });
+        }
     };
     window.app = app;
     app.init();
 
 })();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
+<script src="video-client.js"></script>
 </body>
 </html>

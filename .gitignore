@@ -6,3 +6,4 @@ package-lock.json
 /vendor/
 *.mov
 *.mp4
+**/uploads/**

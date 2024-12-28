@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <style>
+        :root {
+            --background-color: #fff;
+            --text-color: #000;
+            --header-background: #666;
+            --header-color: #fff;
+            box-sizing: border-box;
+            font-family: "Lexend", "Helvetica Neue", "Helvetica", sans-serif;
+            font-size: 18px;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        header, footer {
+            background-color: var(--header-background);
+            color: var(--header-color);
+        }
+
+        header {
+            height: 0vh;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1 10 80vh;
+        }
+
+        footer {
+            height: 0vh;
+        }
+
+    </style>
+</head>
+<body>
+<main>
+
+</main>
+<script>
+(function() {
+    const $ = str => document.querySelector(str);
+    const $$ = str => document.querySelectorAll(str);
+
+    const app = {
+        data: {},
+        state: {
+            loaded: false
+        },
+        async init() {
+            app.data.cookies = await app.parseCookies();
+            if (!app.data.cookies.token) {
+                document.location.href = "/login.html";
+            } else {
+                document.location.href = "/app.html";
+            }
+            app.state.loaded = true;
+        },
+        async parseCookies() {
+            let items = ['username', 'user_id', 'token'];
+            
+            let out = {};
+            for (let item of items) {
+                out[item] = await window.cookieStore.get(item);
+            }
+            return out;
+        },
+ 
+        fetch(url, callback) {
+            fetch(url).then(response=>response.json()).then(data=>{
+                app.data = data;
+                app.state.loaded = true;
+                if (callback && typeof(callback) === "function") {
+                    callback(data);
+                }
+            }).catch(error => console.error('Fetch error:', error));;
+        },
+        display(data, tgt) {
+            let out = "<table><thead><tr>";
+            const keys = Object.keys(data[0]);
+            if (keys) {
+                keys.forEach(key => {
+                    out += `<th>${key}</th>`;
+                });
+            }
+            out += "</tr></thead><tbody>";
+            data.forEach(item=>{
+                out += `<tr>`;
+                keys.forEach(key => {
+                    out += `<td>${item[key]}</td>`;
+                });
+                out += `</tr>`;
+            });
+            out += "</tbody></table>";
+
+            if (tgt) {
+                tgt.innerHTML = out;
+            }
+            return out;
+        }
+    }
+    window.app = app;
+    app.init();
+})();
+</script>
+</body>
+
+</html>
